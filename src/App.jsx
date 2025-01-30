@@ -1,6 +1,8 @@
 import { BrowserRouter, Link, Route, Routes } from "react-router"
 import Dashboard from "./pages/Dashboard/dashboard"
-import Todo from "./pages/Todo/Todo"
+// import Todo from "./pages/Todo/Todo"
+import Todo from "./pages/todo/todo"
+
 import './index.css'
 import 'non.geist'
 

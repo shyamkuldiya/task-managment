@@ -1,10 +1,10 @@
+import Loader from '@/components/Loader';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SheetClose } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { statusOptions } from '@/constants/todo';
 import { cn } from '@/lib/utils';
@@ -12,10 +12,13 @@ import { taskSchema } from '@/schema/todo';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import React from 'react'
+import React, { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
-export default function Edittask({ task, setTaskList,taskList }) {
+export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
     const {
         handleSubmit,
         control,
@@ -34,9 +37,14 @@ export default function Edittask({ task, setTaskList,taskList }) {
             assignedOnDate: format(new Date(), 'yyyy-MM-dd'),
         },
     });
+
     const triggerSubmit = () => {
-        handleSubmit(onSubmit)();
+        setLoading(true)
+        setTimeout(() => {
+            handleSubmit(onSubmit)();
+        }, 1000);
     };
+
     const onSubmit = (data) => {
         const newTask = {
             ...data,
@@ -47,15 +55,17 @@ export default function Edittask({ task, setTaskList,taskList }) {
             console.log(prev);
             return [...prev];
         });
-        reset();
+        setIsEditSheetOpen(false);
+        setLoading(false);
+        toast.success('Task updated successfully');
     };
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
             className="w-full grid gap-4 rounded-2xl"
         >
+            <Loader />
             <div>
-
                 <Controller
                     name="task"
                     control={control}
@@ -75,12 +85,11 @@ export default function Edittask({ task, setTaskList,taskList }) {
             </div>
 
             <div>
-
                 <Controller
                     name="dueDate"
                     control={control}
                     render={({ field }) => (
-                        <Popover>
+                        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant={"outline"}
@@ -89,22 +98,21 @@ export default function Edittask({ task, setTaskList,taskList }) {
                                         !field.value && "text-muted-foreground"
                                     )}
                                 >
-                                    {field.value ? format(new Date(field.value), "PPP") : (
+                                    {field.value ? format(new Date(field.value), "MMM d, yyyy") : (
                                         <span>Pick due date</span>
                                     )}
                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-white" align="start">
+                            <PopoverContent className="w-auto p-0 " align="start">
                                 <Calendar
                                     mode="single"
                                     selected={field.value ? new Date(field.value) : null}
                                     onSelect={(date) => {
                                         setValue('dueDate', format(date, 'yyyy-MM-dd'));
+                                        setIsPopoverOpen(false);
                                     }}
-                                    disabled={(date) =>
-                                        date > new Date() || date < new Date("1900-01-01")
-                                    }
+                                    disabled={(date) => date < new Date()}
                                     initialFocus
                                 />
                             </PopoverContent>

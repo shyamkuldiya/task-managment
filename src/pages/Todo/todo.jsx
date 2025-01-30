@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import AppLayout from '../../Layout/AppLayout';
@@ -19,13 +19,13 @@ import { CalendarIcon, LoaderIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import TaskCard from './components/TaskCard';
-import { taskData } from '@/data';
 import { statusOptions } from '@/constants/todo';
 import { taskSchema } from '@/schema/todo';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Loader from '@/components/Loader';
+import { v4 as unqId } from 'uuid';
+
 
 export default function Todo() {
     const [tasks, setTasks] = useState([]);
@@ -51,34 +51,62 @@ export default function Todo() {
         },
     });
 
+    const getTasksFromLocalStorage = () => {
+        const savedTasks = localStorage.getItem('tasks');
+        try {
+            return savedTasks ? JSON.parse(savedTasks) : [];
+        } catch (error) {
+            console.error('Error parsing tasks from localStorage:', error);
+            return [];
+        }
+    };
 
-    function removeTask(task) {
-        setTasks((prev) => prev.filter((t) => t !== task));
-    }
+    const saveTasksToLocalStorage = (tasks) => {
+        try {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        } catch (error) {
+            console.error('Error saving tasks to localStorage:', error);
+        }
+    };
+
+    const removeTask = useCallback((task) => {
+        setTasks((prev) => {
+            const updatedTasks = prev.filter((t) => t.id !== task.id);
+            toast.success('Task deleted successfully');
+            return updatedTasks;
+        });
+    }, []);
+
+    const addTask = useCallback((newTask) => {
+        setTasks((prev) => {
+            const updatedTasks = [...prev, newTask];
+            return updatedTasks;
+        });
+        reset();
+        setNewTaskSaveLoading(false); // Stop loading spinner
+        toast.success('Task added successfully');
+    }, [reset]);
 
     const onSubmit = (data) => {
         const newTask = {
             ...data,
             assignedOnDate: format(new Date(), 'yyyy-MM-dd'),
-            id: tasks.length + 1,
+            id: unqId(),
         };
         setNewTaskSaveLoading(true);
-        setTimeout(() => {
-            setTasks((prev) => [...prev, newTask]);
-            reset();
-            setNewTaskSaveLoading(false);
-            toast.success('Task added successfully');
-        }, 1000);
+        addTask(newTask);
     };
 
     useEffect(() => {
-        setLoading(true)
-        setTimeout(() => {
-            setTasks(taskData);
-            setLoading(false)
-        }, 1000);
+        setLoading(true);
+        const loadedTasks = getTasksFromLocalStorage();
+        setTasks(loadedTasks); // Set tasks from localStorage
+        setLoading(false);
     }, []);
 
+    useEffect(() => {
+        saveTasksToLocalStorage(tasks); // Sync tasks with localStorage
+    }, [tasks]);
 
     return (
         <AppLayout>
@@ -124,7 +152,7 @@ export default function Todo() {
                                             <Button
                                                 variant={"outline"}
                                                 className={cn(
-                                                    "w-full border-zinc-700 pl-3 text-left font-medium",
+                                                    "w-full  pl-3 text-left font-medium dark:hover:bg-zinc-900",
                                                     !field.value && "text-muted-foreground"
                                                 )}
                                             >
@@ -141,7 +169,6 @@ export default function Todo() {
                                                 onSelect={(date) => {
                                                     setValue('dueDate', format(date, 'yyyy-MM-dd'));
                                                     setPopoverOpen(false);
-
                                                 }}
                                                 disabled={(date) => date < new Date()}
                                                 initialFocus
@@ -151,7 +178,9 @@ export default function Todo() {
                                 )}
                             />
                             {errors.dueDate && (
-                                <p className="text-red-500 text-sm">{errors.dueDate.message}</p>
+                                <>
+                                    {watch('dueDate').length === 0 && <p className="text-red-500 text-sm">{errors.dueDate.message}</p>}
+                                </>
                             )}
                         </div>
                         <div>
@@ -163,7 +192,7 @@ export default function Todo() {
                                         onValueChange={field.onChange}
                                         value={field.value}
                                     >
-                                        <SelectTrigger className={`w-full border border-zinc-700 outline-none ring-0 ${statusOptions.find((option) => option.value === field.value)?.class}`}>
+                                        <SelectTrigger className={`w-full border  outline-none ring-0 ${statusOptions.find((option) => option.value === field.value)?.class}`}>
                                             <SelectValue placeholder="Select status" />
                                         </SelectTrigger>
                                         <SelectContent className="">
@@ -203,6 +232,7 @@ export default function Todo() {
 
                         <button
                             type="submit"
+                            onClick={() => localStorage.setItem('tasks', JSON.stringify(tasks))}
                             className="border-none bg-green-500 px-6 py-1 rounded-md cursor-pointer active:ring-1 ring-green-400"
                         >
                             Add
@@ -214,12 +244,12 @@ export default function Todo() {
                     <div className="overflow-auto md:max-h-[calc(100vh-10rem)] h-full pr-2 custom-scrollbar">
                         {loading ? <LoaderIcon className='w-10 h-10 mx-auto animate-spin' /> :
                             <>
-                                {tasks?.slice().reverse().map((task, index) => (
+                                {tasks.length ? tasks?.slice().reverse().map((task, index) => (
                                     <TaskCard
                                         taskList={tasks} key={index} task={task} removeTodo={removeTask}
                                         setTaskList={setTasks}
                                     />
-                                ))}
+                                )) : <p className="text-center text-gray-500">No tasks found</p>}
                             </>
                         }
                     </div>

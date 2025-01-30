@@ -40,3 +40,21 @@ export function isValidTask(taskInformation) {
         return false;
     }
 }
+
+
+export const getTasksFromLocalStorage = () => {
+    const savedTasks = localStorage.getItem('tasks');
+    try {
+        return savedTasks ? JSON.parse(savedTasks) : []; // when no task but key is there
+    } catch (error) {
+        return []; // when there is no key in local storage
+    }
+};
+
+export const saveTasksToLocalStorage = (tasks) => {
+    try {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    } catch (error) {
+        console.error('Error saving tasks to localStorage:', error);
+    }
+};
