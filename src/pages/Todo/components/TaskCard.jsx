@@ -10,7 +10,6 @@ import Edittask from './Edittask'
 import TaskInfo from './Taskinfo'
 import Loader from '@/components/Loader'
 import CloseButton from '@/components/CloseButton'
-import { toast } from 'sonner'
 
 export default function TaskCard({ task, removeTodo, taskList, setTaskList }) {
 
