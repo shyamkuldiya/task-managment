@@ -19,12 +19,13 @@ import { CalendarIcon, LoaderIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import TaskCard from './components/TaskCard';
-import { statusOptions } from '@/constants/todo';
+import { filterOptions, statusOptions } from '@/constants/todo';
 import { taskSchema } from '@/schema/todo';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import Loader from '@/components/Loader';
 import { v4 as unqId } from 'uuid';
+import { getTasksFromLocalStorage, saveTasksToLocalStorage } from '@/lib/helper';
 
 
 export default function Todo() {
@@ -32,7 +33,7 @@ export default function Todo() {
     const [loading, setLoading] = useState(false);
     const [newTaskSaveLoading, setNewTaskSaveLoading] = useState(false);
     const [popoverOpen, setPopoverOpen] = useState(false);
-
+    const [filter, setFilter] = useState('all');
     const {
         handleSubmit,
         control,
@@ -51,23 +52,6 @@ export default function Todo() {
         },
     });
 
-    const getTasksFromLocalStorage = () => {
-        const savedTasks = localStorage.getItem('tasks');
-        try {
-            return savedTasks ? JSON.parse(savedTasks) : [];
-        } catch (error) {
-            console.error('Error parsing tasks from localStorage:', error);
-            return [];
-        }
-    };
-
-    const saveTasksToLocalStorage = (tasks) => {
-        try {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-        } catch (error) {
-            console.error('Error saving tasks to localStorage:', error);
-        }
-    };
 
     const removeTask = useCallback((task) => {
         setTasks((prev) => {
@@ -83,7 +67,7 @@ export default function Todo() {
             return updatedTasks;
         });
         reset();
-        setNewTaskSaveLoading(false); // Stop loading spinner
+        setNewTaskSaveLoading(false);
         toast.success('Task added successfully');
     }, [reset]);
 
@@ -100,12 +84,14 @@ export default function Todo() {
     useEffect(() => {
         setLoading(true);
         const loadedTasks = getTasksFromLocalStorage();
-        setTasks(loadedTasks); // Set tasks from localStorage
+        if (loadedTasks.length !== 0) {
+            setTasks(loadedTasks);
+        }
         setLoading(false);
     }, []);
 
     useEffect(() => {
-        saveTasksToLocalStorage(tasks); // Sync tasks with localStorage
+        saveTasksToLocalStorage(tasks);
     }, [tasks]);
 
     return (
@@ -118,7 +104,7 @@ export default function Todo() {
                         className="w-full max-w-md mr-auto grid gap-4 bg-gray-200 dark:bg-zinc-800 px-4 py-6 rounded-2xl"
                     >
                         <div>
-                            <p>Create a new Task</p>
+                            <p className=' font-medium text-lg '>Create a new Task</p>
                             <p className="text-sm dark:text-zinc-500 text-zinc-600 ">
                                 Fill the below fields to create a new task.
                             </p>
@@ -230,26 +216,54 @@ export default function Todo() {
                             />
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
-                            onClick={() => localStorage.setItem('tasks', JSON.stringify(tasks))}
-                            className="border-none bg-green-500 px-6 py-1 rounded-md cursor-pointer active:ring-1 ring-green-400"
+                            // className="border-none bg-green-500 px-6 py-1 rounded-md cursor-pointer active:ring-1 ring-green-400"
                         >
                             Add
-                        </button>
+                        </Button>
                     </form>
                 </div>
                 <div className="border-l mt-6 md:mt-0 border-zinc-700 w-full pl-4 overflow-hidden">
-                    <h2 className="text-xl font-medium text-start mb-4">User Tasks</h2>
+                    <div className='flex items-center justify-between mb-4'>
+                        <h2 className="text-xl font-medium text-start ">User Tasks</h2>
+                        <Select
+                            onValueChange={setFilter}
+                            value={filter}
+                        >
+                            <SelectTrigger className="border  outline-none ring-0 w-[124px] gap-2" >
+                                <SelectValue placeholder={filter} />
+                            </SelectTrigger>
+                            <SelectContent >
+                                <SelectGroup>
+                                    {filterOptions.map((option, index) => (
+                                        <SelectItem key={index} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>                    </div>
                     <div className="overflow-auto md:max-h-[calc(100vh-10rem)] h-full pr-2 custom-scrollbar">
                         {loading ? <LoaderIcon className='w-10 h-10 mx-auto animate-spin' /> :
                             <>
-                                {tasks.length ? tasks?.slice().reverse().map((task, index) => (
-                                    <TaskCard
-                                        taskList={tasks} key={index} task={task} removeTodo={removeTask}
-                                        setTaskList={setTasks}
-                                    />
-                                )) : <p className="text-center text-gray-500">No tasks found</p>}
+                                {tasks?.length ? tasks?.slice().reverse().map((task, index) => {
+                                    if (filter === 'all') {
+                                        return (
+                                            <TaskCard
+                                                taskList={tasks} key={index} task={task} removeTodo={removeTask}
+                                                setTasks={setTasks}
+                                            />
+                                        )
+                                    } else {
+                                        return task.status === filter && (
+                                            <TaskCard
+                                                taskList={tasks} key={index} task={task} removeTodo={removeTask}
+                                                setTasks={setTasks}
+                                            />
+                                        )
+                                    }
+                                }) : <p className="text-center text-gray-500">No tasks found</p>}
                             </>
                         }
                     </div>

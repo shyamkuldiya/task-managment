@@ -3,7 +3,7 @@ import React from 'react'
 
 export default function TaskListItem({ task }) {
     return (
-        <div className='p-3 rounded-lg bg-gray-200 dark:bg-zinc-800 mb-3 '>
+        <div className='p-3 '>
             <div className='flex items-start justify-between mb-2 gap-1'>
                 <p className='font-medium capitalize dark:text-white text-zinc-900 text-sm sm:text-base'>
                     {task.task.length > 40 ? task.task.slice(0, 40) + '...' : task.task}

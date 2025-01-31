@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,15 +17,13 @@ import React, { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
+export default function Edittask({ task, setTasks, setIsEditSheetOpen }) {
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const {
         handleSubmit,
         control,
-        reset,
         setValue,
-        watch,
         formState: { errors },
 
     } = useForm({
@@ -49,10 +48,9 @@ export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
         const newTask = {
             ...data,
         };
-        setTaskList((prev) => {
+        setTasks((prev) => {
             let currentTaskId = prev.findIndex((t) => t.id === task.id);
             prev[currentTaskId] = newTask;
-            console.log(prev);
             return [...prev];
         });
         setIsEditSheetOpen(false);
@@ -66,6 +64,7 @@ export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
         >
             <Loader />
             <div>
+                <Label>Task name</Label>
                 <Controller
                     name="task"
                     control={control}
@@ -85,6 +84,7 @@ export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
             </div>
 
             <div>
+            <Label>Task due date</Label>
                 <Controller
                     name="dueDate"
                     control={control}
@@ -94,7 +94,7 @@ export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
                                 <Button
                                     variant={"outline"}
                                     className={cn(
-                                        "w-full border-zinc-700 pl-3 text-left font-medium",
+                                        "w-full  pl-3 text-left font-medium",
                                         !field.value && "text-muted-foreground"
                                     )}
                                 >
@@ -124,6 +124,7 @@ export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
                 )}
             </div>
             <div>
+            <Label>Task status</Label>
                 <Controller
                     name="status"
                     control={control}
@@ -132,7 +133,7 @@ export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
                             onValueChange={field.onChange}
                             value={field.value}
                         >
-                            <SelectTrigger className={`w-full border border-zinc-700 outline-none ring-0 ${statusOptions.find((option) => option.value === field.value)?.class}`}>
+                            <SelectTrigger className={`w-full border  outline-none ring-0 ${statusOptions.find((option) => option.value === field.value)?.class}`}>
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                             <SelectContent className="">
@@ -158,6 +159,7 @@ export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
             </div>
 
             <div>
+            <Label>Task description</Label>
                 <Controller
                     name="description"
                     control={control}
@@ -174,7 +176,7 @@ export default function Edittask({ task, setTaskList, setIsEditSheetOpen }) {
             <Dialog>
                 <DialogTrigger asChild>
                     <Button >
-                        Add
+                        Update
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
