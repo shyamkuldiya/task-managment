@@ -47,6 +47,7 @@ export default function Edittask({ task, setTasks, setIsEditSheetOpen }) {
     const onSubmit = (data) => {
         const newTask = {
             ...data,
+            assignedOnDate: format(new Date(), 'yyyy-MM-dd'),
         };
         setTasks((prev) => {
             let currentTaskId = prev.findIndex((t) => t.id === task.id);
@@ -84,7 +85,7 @@ export default function Edittask({ task, setTasks, setIsEditSheetOpen }) {
             </div>
 
             <div>
-            <Label>Task due date</Label>
+                <Label>Task due date</Label>
                 <Controller
                     name="dueDate"
                     control={control}
@@ -124,7 +125,7 @@ export default function Edittask({ task, setTasks, setIsEditSheetOpen }) {
                 )}
             </div>
             <div>
-            <Label>Task status</Label>
+                <Label>Task status</Label>
                 <Controller
                     name="status"
                     control={control}
@@ -159,7 +160,7 @@ export default function Edittask({ task, setTasks, setIsEditSheetOpen }) {
             </div>
 
             <div>
-            <Label>Task description</Label>
+                <Label>Task description</Label>
                 <Controller
                     name="description"
                     control={control}
@@ -175,9 +176,7 @@ export default function Edittask({ task, setTasks, setIsEditSheetOpen }) {
 
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button >
-                        Update
-                    </Button>
+                    <Button>Update</Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogTitle>

@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import Loader from '@/components/Loader';
 import { v4 as unqId } from 'uuid';
 import { getTasksFromLocalStorage, saveTasksToLocalStorage } from '@/lib/helper';
+import { useNavigate } from 'react-router';
 
 
 export default function Todo() {
@@ -34,6 +35,9 @@ export default function Todo() {
     const [newTaskSaveLoading, setNewTaskSaveLoading] = useState(false);
     const [popoverOpen, setPopoverOpen] = useState(false);
     const [filter, setFilter] = useState('all');
+    const [userName, setUserName] = useState(null)
+    const navigate = useNavigate()
+
     const {
         handleSubmit,
         control,
@@ -86,6 +90,14 @@ export default function Todo() {
         const loadedTasks = getTasksFromLocalStorage();
         if (loadedTasks.length !== 0) {
             setTasks(loadedTasks);
+        }
+        if (localStorage.getItem('userName') === '' || localStorage.getItem('userName') === null) {
+            navigate('/')
+            toast.error('Please provide user name to continue');
+        }
+        if (localStorage.getItem('userName')) {
+            let userNameArray = localStorage.getItem('userName').split(' ');
+            setUserName(userNameArray[0]);
         }
         setLoading(false);
     }, []);
@@ -218,7 +230,7 @@ export default function Todo() {
 
                         <Button
                             type="submit"
-                            // className="border-none bg-green-500 px-6 py-1 rounded-md cursor-pointer active:ring-1 ring-green-400"
+                        // className="border-none bg-green-500 px-6 py-1 rounded-md cursor-pointer active:ring-1 ring-green-400"
                         >
                             Add
                         </Button>
@@ -226,7 +238,7 @@ export default function Todo() {
                 </div>
                 <div className="border-l mt-6 md:mt-0 border-zinc-700 w-full pl-4 overflow-hidden">
                     <div className='flex items-center justify-between mb-4'>
-                        <h2 className="text-xl font-medium text-start ">User Tasks</h2>
+                        <h2 className="text-xl font-medium text-start ">{`${userName}'s`} Task List</h2>
                         <Select
                             onValueChange={setFilter}
                             value={filter}
@@ -246,10 +258,30 @@ export default function Todo() {
                         </Select>                    </div>
                     <div className="overflow-auto md:max-h-[calc(100vh-10rem)] h-full pr-2 custom-scrollbar">
                         {loading ? <LoaderIcon className='w-10 h-10 mx-auto animate-spin' /> :
+                            // <>
+                            //     {tasks?.length ? tasks?.slice().reverse().map((task, index) => {
+                            //         if (filter === 'all') {
+                            //             return (
+                            //                 <TaskCard
+                            //                     taskList={tasks} key={index} task={task} removeTodo={removeTask}
+                            //                     setTasks={setTasks}
+                            //                 />
+                            //             )
+                            //         } else {
+                            //             return task.status === filter && (
+                            //                 <TaskCard
+                            //                     taskList={tasks} key={index} task={task} removeTodo={removeTask}
+                            //                     setTasks={setTasks}
+                            //                 />
+                            //             )
+                            //         }
+                            //     }) : <p className="text-center text-gray-500">No tasks found</p>}
+                            // </>
                             <>
                                 {tasks?.length ? tasks?.slice().reverse().map((task, index) => {
                                     if (filter === 'all') {
                                         return (
+
                                             <TaskCard
                                                 taskList={tasks} key={index} task={task} removeTodo={removeTask}
                                                 setTasks={setTasks}
@@ -263,7 +295,8 @@ export default function Todo() {
                                             />
                                         )
                                     }
-                                }) : <p className="text-center text-gray-500">No tasks found</p>}
+                                }) :
+                                    <p className="text-center text-gray-500">No tasks found.</p>}
                             </>
                         }
                     </div>
