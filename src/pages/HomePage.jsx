@@ -66,10 +66,10 @@ export default function HomePage() {
 
             </div>
             <a
-                href='https://github.com/shyamchoudharyy'
+                href='https://github.com/shyamkuldiya'
                 target="_blank"
                 className="block mt-2 justify-self-end ">
-                Made with ❤️ by @shyamchoudharyy
+                Made with ❤️ by Shyam Choudhary
             </a>
         </div>
     )
